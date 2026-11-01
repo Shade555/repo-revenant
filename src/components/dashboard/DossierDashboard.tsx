@@ -21,6 +21,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { sound } from '@/lib/audio/sound-synth';
 
 const TABS = [
   { id: 'overview', label: 'Overview & Health', icon: LayoutDashboard },
@@ -35,6 +36,15 @@ const TABS = [
 export function DossierDashboard({ dossier }: { dossier: DossierReport }) {
   const [activeTab, setActiveTab] = useState('overview');
 
+  const handleTabChange = (tabId: string) => {
+    if (tabId === 'seance') {
+      sound.playSpectralChime();
+    } else {
+      sound.playClick(650);
+    }
+    setActiveTab(tabId);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Dossier Header */}
@@ -48,7 +58,7 @@ export function DossierDashboard({ dossier }: { dossier: DossierReport }) {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-semibold whitespace-nowrap transition-all relative cursor-pointer',
                 isActive

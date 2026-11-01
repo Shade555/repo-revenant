@@ -18,6 +18,7 @@ import { RadarScan } from '@/components/ui/RadarScan';
 import { TerminalStream } from '@/components/ui/TerminalStream';
 import { InvestigationLog } from '@/types';
 import { SAMPLE_DOSSIERS } from '@/lib/sample-data';
+import { sound } from '@/lib/audio/sound-synth';
 
 interface AgentState {
   id: 'summoner' | 'historian' | 'archaeologist' | 'exorcist' | 'revivalist';
@@ -130,6 +131,7 @@ export function InvestigationTerminal() {
     // Step 2: Historian & Archaeologist launch in parallel
     timers.push(
       setTimeout(() => {
+        sound.playBlip(800);
         setAgents((prev) =>
           prev.map((a) => {
             if (a.id === 'summoner') return { ...a, status: 'completed', progress: 100 };
@@ -172,6 +174,7 @@ export function InvestigationTerminal() {
     // Step 3: Historian finds abandonment point, Archaeologist finishes architecture
     timers.push(
       setTimeout(() => {
+        sound.playBlip(1000);
         setAgents((prev) =>
           prev.map((a) => {
             if (a.id === 'historian') return { ...a, progress: 85 };
@@ -205,6 +208,7 @@ export function InvestigationTerminal() {
     // Step 4: Exorcist launches
     timers.push(
       setTimeout(() => {
+        sound.playBlip(1200);
         setAgents((prev) =>
           prev.map((a) => {
             if (a.id === 'historian' || a.id === 'archaeologist')
@@ -239,6 +243,7 @@ export function InvestigationTerminal() {
     // Step 5: Revivalist runs
     timers.push(
       setTimeout(() => {
+        sound.playBlip(1400);
         setAgents((prev) =>
           prev.map((a) => {
             if (a.id === 'exorcist') return { ...a, status: 'completed', progress: 100 };
@@ -272,6 +277,7 @@ export function InvestigationTerminal() {
     // Step 6: Complete
     timers.push(
       setTimeout(() => {
+        sound.playSpectralChime();
         setAgents((prev) =>
           prev.map((a) => ({ ...a, status: 'completed', progress: 100 }))
         );
@@ -297,6 +303,7 @@ export function InvestigationTerminal() {
   }, [target]);
 
   const handleOpenDossier = () => {
+    sound.playSwitch();
     router.push(`/dashboard/${activeDossierId}`);
   };
 
@@ -412,7 +419,7 @@ export function InvestigationTerminal() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/40 via-violet-950/40 to-emerald-950/40 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/40 via-violet-950/40 to-emerald-950/40 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl"
         >
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">

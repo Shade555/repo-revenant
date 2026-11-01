@@ -16,12 +16,14 @@ import {
 } from 'lucide-react';
 import { DossierReport } from '@/types';
 import { calculateDaysAgo, formatNumber } from '@/lib/utils';
+import { sound } from '@/lib/audio/sound-synth';
 
 export function DossierHeader({ dossier }: { dossier: DossierReport }) {
   const [copied, setCopied] = useState(false);
   const daysDormant = calculateDaysAgo(dossier.historian.lastCommitDate);
 
   const handleCopyShare = () => {
+    sound.playClick(850);
     if (typeof window !== 'undefined') {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);
@@ -30,6 +32,7 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
   };
 
   const handleExportJson = () => {
+    sound.playClick(1000);
     const dataStr =
       'data:text/json;charset=utf-8,' +
       encodeURIComponent(JSON.stringify(dossier, null, 2));
@@ -42,7 +45,7 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
   };
 
   return (
-    <div className="glass-panel p-6 sm:p-8 rounded-2xl border-amber-500/20 mb-8 relative overflow-hidden">
+    <div className="bracket-box p-6 sm:p-8 rounded-2xl bg-[#080b12] border border-amber-500/30 mb-8 relative overflow-hidden shadow-2xl">
       {/* Background ambient glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 blur-[80px] pointer-events-none" />
 
@@ -50,18 +53,18 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
         <div>
           {/* Identity & Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-amber-300">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-amber-300 font-bold">
               <Skull className="w-3.5 h-3.5 text-amber-400" />
               <span>REVIVAL DOSSIER #{dossier.id}</span>
             </span>
 
             {dossier.isDemo && (
-              <span className="px-2.5 py-1 rounded-full bg-violet-950/70 text-violet-300 border border-violet-500/30 text-xs font-mono">
-                DEMONSTRATION ARTIFACT
+              <span className="px-3 py-1 rounded-full bg-violet-950/70 text-violet-300 border border-violet-500/30 text-xs font-mono font-bold">
+                DEMONSTRATION SPECIMEN
               </span>
             )}
 
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-700 text-xs font-mono">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-700 text-xs font-mono">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
               <span>Dormant for {daysDormant.toLocaleString()} days</span>
             </span>
@@ -82,7 +85,7 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
             </a>
           </div>
 
-          <p className="text-slate-300 text-sm max-w-3xl mt-2 leading-relaxed">
+          <p className="text-slate-300 text-sm max-w-3xl mt-2 leading-relaxed font-sans">
             {dossier.description}
           </p>
 
@@ -90,19 +93,19 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
           <div className="flex flex-wrap items-center gap-5 mt-4 text-xs font-mono text-slate-400">
             <div className="flex items-center gap-1.5">
               <Star className="w-4 h-4 text-amber-400" />
-              <span>{formatNumber(dossier.stars)} stars</span>
+              <span className="text-slate-300">{formatNumber(dossier.stars)} stars</span>
             </div>
             <div className="flex items-center gap-1.5">
               <GitFork className="w-4 h-4 text-slate-400" />
-              <span>{formatNumber(dossier.forks)} forks</span>
+              <span className="text-slate-300">{formatNumber(dossier.forks)} forks</span>
             </div>
             <div className="flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 text-rose-400" />
-              <span>{dossier.openIssues} open issues</span>
+              <span className="text-slate-300">{dossier.openIssues} open issues</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-slate-500">License:</span>
-              <span className="text-slate-200">{dossier.license}</span>
+              <span className="text-slate-200 font-semibold">{dossier.license}</span>
             </div>
           </div>
         </div>
@@ -111,7 +114,7 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <button
             onClick={handleCopyShare}
-            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 flex items-center gap-2 transition-all cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 flex items-center gap-2 transition-all cursor-pointer shadow-sm"
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -123,7 +126,7 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
 
           <button
             onClick={handleExportJson}
-            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 flex items-center gap-2 transition-all cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 flex items-center gap-2 transition-all cursor-pointer shadow-sm"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export JSON</span>
@@ -131,7 +134,7 @@ export function DossierHeader({ dossier }: { dossier: DossierReport }) {
 
           <Link
             href={`/investigate?target=${encodeURIComponent(`${dossier.owner}/${dossier.name}`)}`}
-            className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 flex items-center gap-2 transition-all"
+            className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 flex items-center gap-2 transition-all shadow-sm"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Re-excavate</span>
