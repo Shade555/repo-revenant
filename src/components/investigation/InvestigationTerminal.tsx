@@ -83,7 +83,8 @@ export function InvestigationTerminal() {
   ]);
 
   const matchedSample = SAMPLE_DOSSIERS[target];
-  const dossierId = matchedSample ? matchedSample.id : 'dossier-three20-archived';
+  const defaultDossierId = matchedSample ? matchedSample.id : 'dossier-three20-archived';
+  const [activeDossierId, setActiveDossierId] = useState(defaultDossierId);
 
   const [logs, setLogs] = useState<InvestigationLog[]>(() => [
     {
@@ -107,6 +108,22 @@ export function InvestigationTerminal() {
   const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
+    // Fire real background API excavation
+    fetch('/api/investigate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data?.dossierId) {
+          setActiveDossierId(data.dossierId);
+        }
+      })
+      .catch((err) => {
+        console.warn('Live API returned fallback; proceeding with client excavation:', err);
+      });
+
     // Sequential multi-agent simulation that simulates real step progression
     const timers: NodeJS.Timeout[] = [];
 
@@ -280,7 +297,7 @@ export function InvestigationTerminal() {
   }, [target]);
 
   const handleOpenDossier = () => {
-    router.push(`/dashboard/${dossierId}`);
+    router.push(`/dashboard/${activeDossierId}`);
   };
 
   return (

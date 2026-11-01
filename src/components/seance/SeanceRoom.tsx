@@ -84,60 +84,84 @@ export function SeanceRoom({ dossier }: { dossier: DossierReport }) {
     setInput('');
     setIsThinking(true);
 
-    // Dynamic AI response based on retrieved evidence from the dossier
-    setTimeout(() => {
-      let replyContent = '';
-      let confidence: ConfidenceLevel = 'verified';
-      let caveat: string | undefined = undefined;
-      const citations = [...dossier.evidenceLedger];
+    // Fire real background API to consult Gemma 3 / Ollama
+    fetch('/api/seance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dossierId: dossier.id,
+        question: q,
+        history: messages.slice(-4).map((m) => ({ role: m.role, content: m.content })),
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data?.message) {
+          msgCounterRef.current += 1;
+          const apiMsg: SeanceMessage = {
+            ...data.message,
+            id: `bot-${msgCounterRef.current}`,
+          };
+          setMessages((prev) => [...prev, apiMsg]);
+          setIsThinking(false);
+          return;
+        }
+        throw new Error('API fallback');
+      })
+      .catch(() => {
+        // Dynamic deterministic fallback based on retrieved evidence from the dossier
+        let replyContent = '';
+        let confidence: ConfidenceLevel = 'verified';
+        let caveat: string | undefined = undefined;
+        const citations = [...dossier.evidenceLedger];
 
-      const lowerQ = q.toLowerCase();
+        const lowerQ = q.toLowerCase();
 
-      if (lowerQ.includes('why') && (lowerQ.includes('stop') || lowerQ.includes('abandon'))) {
-        confidence = 'verified';
-        replyContent = `Based on the repository's historical records, development ceased on ${new Date(
-          dossier.historian.lastCommitDate
-        ).toLocaleDateString()}.\n\nPrimary evidence signals:\n${dossier.historian.abandonmentSignals
-          .map((s) => `• ${s}`)
-          .join('\n')}\n\nNotice that we refrain from speculating on private developer motives; the verified evidence points directly to toolchain deprecation and maintainer turnover.`;
-      } else if (lowerQ.includes('accomplish') || lowerQ.includes('intent') || lowerQ.includes('purpose')) {
-        confidence = 'inferred';
-        caveat = 'Reconstructed through AST structure and README documentation.';
-        replyContent = `${dossier.archaeologist.originalIntent}\n\nOur architectural philosophy centered on: ${dossier.archaeologist.architectureOverview}`;
-      } else if (lowerQ.includes('blocker') || lowerQ.includes('debt') || lowerQ.includes('bug')) {
-        confidence = 'verified';
-        replyContent = `The primary technical blocker is: ${dossier.exorcist.summary}\n\nKey areas needing immediate triage:\n${dossier.exorcist.outdatedDependencies
-          .map((d) => `• ${d.name}: current ${d.currentVersion} (Target: ${d.latestVersion}) - Risk: ${d.risk}`)
-          .join('\n')}`;
-      } else if (lowerQ.includes('first') || lowerQ.includes('start') || lowerQ.includes('revive')) {
-        confidence = 'verified';
-        const topTask = dossier.revivalist.topPriorities[0];
-        replyContent = `The first recommended action is: **${topTask.title}** (${topTask.difficulty} difficulty, ${topTask.impact} impact).\n\n${topTask.description}\n\nSteps to take:\n${topTask.implementationSteps
-          .map((s) => `1. ${s}`)
-          .join('\n')}`;
-      } else {
-        confidence = 'inferred';
-        replyContent = `Reflecting upon ${dossier.name}'s artifacts: The codebase contains ${dossier.archaeologist.languages
-          .map((l) => `${l.name} (${l.percentage}%)`)
-          .join(', ')} across ${dossier.historian.totalCommitsEstimated} historical commits.\n\nTo explore further, consult our 3-phase roadmap or inspect the excavated entry points at ${dossier.archaeologist.entryPoints
-          .map((e) => e.path)
-          .join(', ')}.`;
-      }
+        if (lowerQ.includes('why') && (lowerQ.includes('stop') || lowerQ.includes('abandon'))) {
+          confidence = 'verified';
+          replyContent = `Based on the repository's historical records, development ceased on ${new Date(
+            dossier.historian.lastCommitDate
+          ).toLocaleDateString()}.\n\nPrimary evidence signals:\n${dossier.historian.abandonmentSignals
+            .map((s) => `• ${s}`)
+            .join('\n')}\n\nNotice that we refrain from speculating on private developer motives; the verified evidence points directly to toolchain deprecation and maintainer turnover.`;
+        } else if (lowerQ.includes('accomplish') || lowerQ.includes('intent') || lowerQ.includes('purpose')) {
+          confidence = 'inferred';
+          caveat = 'Reconstructed through AST structure and README documentation.';
+          replyContent = `${dossier.archaeologist.originalIntent}\n\nOur architectural philosophy centered on: ${dossier.archaeologist.architectureOverview}`;
+        } else if (lowerQ.includes('blocker') || lowerQ.includes('debt') || lowerQ.includes('bug')) {
+          confidence = 'verified';
+          replyContent = `The primary technical blocker is: ${dossier.exorcist.summary}\n\nKey areas needing immediate triage:\n${dossier.exorcist.outdatedDependencies
+            .map((d) => `• ${d.name}: current ${d.currentVersion} (Target: ${d.latestVersion}) - Risk: ${d.risk}`)
+            .join('\n')}`;
+        } else if (lowerQ.includes('first') || lowerQ.includes('start') || lowerQ.includes('revive')) {
+          confidence = 'verified';
+          const topTask = dossier.revivalist.topPriorities[0];
+          replyContent = `The first recommended action is: **${topTask.title}** (${topTask.difficulty} difficulty, ${topTask.impact} impact).\n\n${topTask.description}\n\nSteps to take:\n${topTask.implementationSteps
+            .map((s) => `1. ${s}`)
+            .join('\n')}`;
+        } else {
+          confidence = 'inferred';
+          replyContent = `Reflecting upon ${dossier.name}'s artifacts: The codebase contains ${dossier.archaeologist.languages
+            .map((l) => `${l.name} (${l.percentage}%)`)
+            .join(', ')} across ${dossier.historian.totalCommitsEstimated} historical commits.\n\nTo explore further, consult our 3-phase roadmap or inspect the excavated entry points at ${dossier.archaeologist.entryPoints
+            .map((e) => e.path)
+            .join(', ')}.`;
+        }
 
-      msgCounterRef.current += 1;
-      const botMsg: SeanceMessage = {
-        id: `bot-${msgCounterRef.current}`,
-        role: 'assistant',
-        content: replyContent,
-        timestamp: 'Reconstructed',
-        confidence,
-        citations: citations.slice(0, 3),
-        inferredCaveat: caveat,
-      };
+        msgCounterRef.current += 1;
+        const botMsg: SeanceMessage = {
+          id: `bot-${msgCounterRef.current}`,
+          role: 'assistant',
+          content: replyContent,
+          timestamp: 'Reconstructed',
+          confidence,
+          citations: citations.slice(0, 3),
+          inferredCaveat: caveat,
+        };
 
-      setMessages((prev) => [...prev, botMsg]);
-      setIsThinking(false);
-    }, 1800);
+        setMessages((prev) => [...prev, botMsg]);
+        setIsThinking(false);
+      });
   };
 
   const handleCopyMessage = (msgId: string, text: string) => {

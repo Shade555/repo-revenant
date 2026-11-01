@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: repo-revenant
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.0.0
+      - key: OLLAMA_BASE_URL
+        value: http://localhost:11434
+      - key: OLLAMA_MODEL
+        value: gemma3:4b
+      - key: MONGODB_DATABASE
+        value: repo_revenant
